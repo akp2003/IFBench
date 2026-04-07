@@ -2043,7 +2043,12 @@ class WordsPositionChecker(Instruction):
 		words = instructions_util.nltk.word_tokenize(value)
 		if len(words) < 2:
 			return False
-		if words[1].lower() == words[-2].lower() == self._keyword.lower():
+		if words[-1] in string.punctuation:
+			if words[1].lower() == words[-3].lower() == self._keyword.lower():
+				return True
+			else:
+				return False
+		elif words[1].lower() == words[-2].lower() == self._keyword.lower():
 			return True
 		else:
 			return False
