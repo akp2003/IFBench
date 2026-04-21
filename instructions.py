@@ -38,6 +38,14 @@ import io
 
 import instructions_util
 
+
+def _word_tokens_without_punctuation(text):
+	"""Tokenize text while excluding standalone punctuation tokens."""
+	return [
+		token for token in instructions_util.nltk.word_tokenize(text)
+		if any(ch.isalnum() for ch in token)
+	]
+
 logger = logging.getLogger(__name__)
 
 _InstructionArgsDtype = Optional[Dict[str, Union[int, str, Sequence[str]]]]
@@ -1992,7 +2000,7 @@ class KeywordSpecificPositionChecker(Instruction):
 		sentences = instructions_util.split_into_sentences(value)
 		if len(sentences) < self._n:
 			return False
-		words = instructions_util.nltk.word_tokenize(sentences[self._n - 1])
+		words = _word_tokens_without_punctuation(sentences[self._n - 1])
 		if len(words) < self._m:
 			return False
 		if words[self._m - 1].lower() == self._keyword.lower():
@@ -2133,14 +2141,14 @@ class RepeatSimpleChecker(Instruction):
 
 
 class RepeatSpanChecker(Instruction):
-	"Copy the span of words that lies between (and including) index {n_start} and {n_end}, the indices are character indices!"
+	"Copy the span of words from word index {n_start} up to but not including word index {n_end}."
 
 	def build_description(self, prompt_to_repeat=None, n_start=None, n_end=None):
 		"""Build the instruction description.
 
 		  Args:
-		  n_start: An integer representing the start index of the span.
-		  n_end: An integer representing the end index of the span.
+		  n_start: An integer representing the inclusive start word index of the span.
+		  n_end: An integer representing the exclusive end word index of the span.
 
 		  Returns:
 		  A string representing the instruction description.
@@ -2149,16 +2157,16 @@ class RepeatSpanChecker(Instruction):
 			raise ValueError("prompt_to_repeat must be set.")
 		else:
 			self._prompt_to_repeat = prompt_to_repeat
-		if not n_start:
+		if n_start is None:
 			self._n_start = random.randint(0, len(self._prompt_to_repeat.split()) - 2)
 		else:
 			self._n_start = n_start
-		if not n_end:
+		if n_end is None:
 			self._n_end = random.randint(self._n_start + 1, len(self._prompt_to_repeat.split()) - 1)
 		else:
 			self._n_end = n_end
 		self._description_pattern = (
-			"Copy the span of words that lies between (and including) index {n_start} and {n_end}, the indices are character indices!")
+			"Copy the span of words from word index {n_start} up to but not including word index {n_end}.")
 		return self._description_pattern.format(n_start=self._n_start, n_end=self._n_end,
 												prompt_to_repeat=self._prompt_to_repeat)
 
