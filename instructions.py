@@ -28,6 +28,7 @@ _nltk_data_dir.mkdir(exist_ok=True)
 os.environ.setdefault("NLTK_DATA", str(_nltk_data_dir))
 
 import nltk
+
 nltk.data.path.insert(0, str(_nltk_data_dir))
 import emoji
 import syllapy
@@ -1062,7 +1063,6 @@ class IncludeKeywordChecker(Instruction):
 		  A string representing the instruction description.
 		"""
 
-
 		if not word:
 			self._keyword = instructions_util.generate_keywords(
 				num_keywords=1
@@ -1124,10 +1124,23 @@ class PronounCountChecker(Instruction):
 
 	def check_following(self, value):
 		"""Checks if the response includes at least {N} pronouns."""
-		pronouns = set(
-			['i', 'me', 'my', 'mine', 'myself', 'we', 'us', 'our', 'ours', 'ourselves', 'you', 'your', 'yours',
-			 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its',
-			 'itself', 'they', 'them', 'their', 'theirs', 'themselves'])
+		pronouns = set([
+			# Personal (subject / object)
+			'i', 'me', 'we', 'us', 'you', 'he', 'him', 'she', 'her', 'it', 'they', 'them',
+			# Possessive (determiner + independent)
+			'my', 'mine', 'our', 'ours', 'your', 'yours', 'his', 'her', 'hers', 'its', 'their', 'theirs',
+			# Reflexive
+			'myself', 'ourselves', 'yourself', 'yourselves', 'himself', 'herself', 'itself', 'themselves',
+			# Demonstrative
+			'this', 'that', 'these', 'those',
+			# Interrogative
+			'who', 'whom', 'whose', 'which', 'what',
+			# Relative / compound interrogative
+			'whoever', 'whomever', 'whatever', 'whichever',
+			# Indefinite
+			'anybody', 'anyone', 'anything', 'everybody', 'everyone', 'everything',
+			'nobody', 'nothing', 'somebody', 'someone', 'something',
+			'each', 'either', 'neither', 'both', 'all', 'some', 'any', 'none'])
 		value = value.replace('/',
 							  ' ')  # to correctly count pronoun sets like she/her/hers, a common use case of pronouns
 		# Use NLTK word_tokenize for better tokenization
@@ -1236,8 +1249,6 @@ class IncrementingWordCountChecker(Instruction):
 		self._num_increment = small_n
 		if self._num_increment is None or self._num_increment < 0:
 			self._num_increment = random.randint(1, _NUM_INCREMENT)
-
-
 
 		self._description_pattern = "Each sentence must contain exactly {small_n} more words than the previous one."
 		return self._description_pattern.format(small_n=self._num_increment)
@@ -1621,7 +1632,6 @@ class WordReverseOrderChecker(Instruction):
 	"""What animal is the national symbol of the US? Respond to this query, but make your sentence in reverse order of what it should be, per word."""
 
 	def build_description(self, **kwargs):
-
 		self._description_pattern = "What animal is the national symbol of the US? Respond to this query, but make your sentence in reverse order of what it should be, per word."
 		return self._description_pattern
 
