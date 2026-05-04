@@ -2141,14 +2141,14 @@ class RepeatSimpleChecker(Instruction):
 
 
 class RepeatSpanChecker(Instruction):
-	"Copy the span of words from word index {n_start} up to but not including word index {n_end}."
+	"Copy the span of words that lies between (and including) index {n_start} and {n_end}, the indices are character indices!"
 
 	def build_description(self, prompt_to_repeat=None, n_start=None, n_end=None):
 		"""Build the instruction description.
 
 		  Args:
-		  n_start: An integer representing the inclusive start word index of the span.
-		  n_end: An integer representing the exclusive end word index of the span.
+		  n_start: An integer representing the inclusive start character index of the span.
+		  n_end: An integer representing the inclusive end character index of the span.
 
 		  Returns:
 		  A string representing the instruction description.
@@ -2158,15 +2158,15 @@ class RepeatSpanChecker(Instruction):
 		else:
 			self._prompt_to_repeat = prompt_to_repeat
 		if n_start is None:
-			self._n_start = random.randint(0, len(self._prompt_to_repeat.split()) - 2)
+			self._n_start = random.randint(0, len(self._prompt_to_repeat) - 2)
 		else:
 			self._n_start = n_start
 		if n_end is None:
-			self._n_end = random.randint(self._n_start + 1, len(self._prompt_to_repeat.split()) - 1)
+			self._n_end = random.randint(self._n_start + 1, len(self._prompt_to_repeat) - 1)
 		else:
 			self._n_end = n_end
 		self._description_pattern = (
-			"Copy the span of words from word index {n_start} up to but not including word index {n_end}.")
+			"Copy the span of words that lies between (and including) index {n_start} and {n_end}, the indices are character indices!")
 		return self._description_pattern.format(n_start=self._n_start, n_end=self._n_end,
 												prompt_to_repeat=self._prompt_to_repeat)
 
@@ -2180,7 +2180,8 @@ class RepeatSpanChecker(Instruction):
 
 	def check_following(self, value):
 		"""Checks if the response contains the expected number of phrases with the correct modifications."""
-		if value.strip().lower().split() == self._prompt_to_repeat.strip().lower().split()[self._n_start:self._n_end]:
+		expected_span = self._prompt_to_repeat[self._n_start:self._n_end + 1]
+		if value.strip().lower() == expected_span.strip().lower():
 			return True
 		return False
 
